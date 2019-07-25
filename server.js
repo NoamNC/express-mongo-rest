@@ -22,16 +22,29 @@ app.put('/user', (req, res) => {
 
 app.delete('/user/:id', (req, res) => {
     db.collection('users')
-        .deleteOne({_id: ObjectId(req.params.id)})
-        .then(() => res.status(204).send());
+                .deleteOne({_id: ObjectId(req.params.id)})
+                .then(obj => {
+                    if(obj.deleteCount===0){
+                        res.status(404).send();
+                        return;
+                    }
+                        res.status(204).send();
+                });
 });
 
 app.get('/user/:id', (req, res) => {
-
+    db.collection('users')
+    .findOne({_id: ObjectId(req.params.id)})
+    .then(user=> res.json(user));
 });
 
 app.get('/user', (req, res) => {
-
+    db.collection('users')
+    .find({})
+    .skip(parseInt(req.query.skip,10||0))
+    .limit(parseInt(req.query.limit,10||0))
+    .toArray()
+    .then(users=> res.json(users));
 });
 
 
