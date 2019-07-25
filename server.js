@@ -40,11 +40,41 @@ app.get('/user/:id', (req, res) => {
 
 app.get('/user', (req, res) => {
     db.collection('users')
-    .find({})
-    .skip(parseInt(req.query.skip,10||0))
-    .limit(parseInt(req.query.limit,10||0))
-    .toArray()
-    .then(users=> res.json(users));
+    .findOne({})
+    .then(user=>{
+        if(!user){
+            res.status(204).send();
+            return;
+        }
+        var paramArr= Object.keys(user);
+        if(req.query.filter){
+            try{
+                var filter=JSON.parse(req.query.filter);
+                for(let prop in filter){
+                    if(!paramArr.includes(prop)){
+                        res.status(400).send();
+                        return;
+                    }
+                }
+                if(filter._id){
+                    filter._id=ObjectId(filter._id);
+                }
+            }
+            catch(err){
+                console.log(err);
+                res.status(400).send();
+                return;
+            }
+        }
+        db.collection('users')
+        .find(filter||{})
+        .sort(parseInt(req.query.sort||0))
+        .skip(parseInt(req.query.skip||0))
+        .limit(parseInt(req.query.limit||0))
+        .toArray()
+        .then(users=> res.json(users));
+    });
+
 });
 
 
